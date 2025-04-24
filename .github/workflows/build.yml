@@ -1,0 +1,51 @@
+name: Build Extensions
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'src/**'
+    - '.github/workflows/build.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 2G
+      SCCACHE_VERSION: 0.3.0
+    runs-on: ubuntu-latest
+    steps:
+    -
+      uses: actions/checkout@v4
+    -
+      uses: google/wireit@setup-github-actions-caching/v1
+    -
+      name: Cache rust stuff
+      uses: actions/cache@v4
+      with:
+        path: |
+         ~/.cargo/registry/index
+         ~/.cargo/registry/cache
+         ~/.cargo/git/db
+         ~/.cargo/bin
+         src/rust/**/target/
+        key: ${{ runner.os }}-cargo3-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo3-
+    -
+      name: sccache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/sccache
+        key: ${{ runner.os }}-sccache-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-sccache-
+    -
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+        target: wasm32-unknown-unknown
