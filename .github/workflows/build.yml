@@ -5,7 +5,7 @@ on:
     - main
     paths:
     - 'src/**'
-    - '.github/workflows/build.yaml'
+    - '.github/workflows/build.yml'
 
 concurrency:
   group: ${{ github.workflow }}
